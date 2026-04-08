@@ -1,0 +1,17 @@
+body { font-family: sans-serif; background: #f0f2f5; display: flex; justify-content: center; padding: 20px; }
+.main-container { width: 100%; max-width: 500px; }
+.tracker-card, .config-card, .chart-card { background: white; padding: 20px; border-radius: 15px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); margin-bottom: 20px; text-align: center; }
+
+#display { font-size: 3rem; font-weight: bold; margin: 20px 0; font-family: monospace; }
+select, input[type="text"] { padding: 10px; border-radius: 5px; border: 1px solid #ddd; width: 60%; }
+input[type="color"] { border: none; width: 40px; height: 40px; vertical-align: middle; cursor: pointer; }
+
+#startStopBtn { padding: 15px 40px; font-size: 1.2rem; color: white; border: none; border-radius: 30px; cursor: pointer; transition: 0.3s; width: 100%; }
+.stop-mode { opacity: 0.8; }
+
+#activityList { list-style: none; padding: 0; text-align: left; margin-top: 15px; }
+.activity-item { display: flex; justify-content: space-between; align-items: center; padding: 8px; border-bottom: 1px solid #eee; }
+.delete-link { color: #ff4d4d; cursor: pointer; font-size: 0.8rem; font-weight: bold; }
+
+.danger-btn { background: none; color: #ff4d4d; border: 1px solid #ff4d4d; padding: 5px 10px; border-radius: 5px; cursor: pointer; margin-top: 10px; }
+.canvas-wrapper { height: 250px; }

@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Custom Time Tracker</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+
+    <div class="main-container">
+        <section class="tracker-card" id="timerCard">
+            <h1>Time Tracker</h1>
+            <div class="input-group">
+                <select id="categorySelect" onchange="updateButtonColor()"></select>
+            </div>
+            <div id="display">00:00:00</div>
+            <button id="startStopBtn">Start</button>
+        </section>
+
+        <section class="config-card">
+            <h3>Manage Activities</h3>
+            <div class="add-activity">
+                <input type="text" id="newActivityName" placeholder="Activity Name">
+                <input type="color" id="newActivityColor" value="#4CAF50">
+                <button onclick="addActivity()">Add</button>
+            </div>
+            <ul id="activityList"></ul>
+            <hr>
+            <button class="danger-btn" onclick="clearAllData()">Reset All Data</button>
+        </section>
+
+        <section class="chart-card">
+            <div class="chart-header">
+                <h2>Overview</h2>
+                <div class="chart-controls">
+                    <button onclick="updateChart('week')">W</button>
+                    <button onclick="updateChart('month')">M</button>
+                    <button onclick="updateChart('year')">Y</button>
+                </div>
+            </div>
+            <div class="canvas-wrapper">
+                <canvas id="timeChart"></canvas>
+            </div>
+        </section>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
