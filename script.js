@@ -1,194 +1,103 @@
-let timerInterval;
-let startTime; 
-let isRunning = false;
-let selectedCategory = null;
-let myChart = null;
-
-// Categories
-let categories = JSON.parse(localStorage.getItem('trackerCategories')) || [
-    { name: 'Reading', color: '#4CAF50' },
-    { name: 'Exercising', color: '#007AFF' },
-    { name: 'VFX', color: '#5856D6' },
-    { name: 'Birds', color: '#FF9500' }
-];
-
-const display = document.getElementById('display');
-const startStopBtn = document.getElementById('startStopBtn');
-
-// 1. SELECTING ACTIVITY (TILE LOGIC)
-function renderActivityTiles() {
-    const container = document.getElementById('activityTiles');
-    container.innerHTML = '';
-    categories.forEach(cat => {
-        const div = document.createElement('div');
-        div.className = 'activity-tile';
-        if (selectedCategory && selectedCategory.name === cat.name) {
-            div.classList.add('selected');
-        }
-        div.style.color = cat.color;
-        div.innerText = cat.name;
-        div.onclick = () => {
-            selectedCategory = cat;
-            renderActivityTiles();
-            renderActivities(); // Sync the delete list
-            updateButtonColor();
-        };
-        container.appendChild(div);
-    });
-    
-    if (!selectedCategory && categories.length > 0) {
-        selectedCategory = categories[0];
-        renderActivityTiles();
-    }
+body { 
+    font-family: -apple-system, system-ui, BlinkMacSystemFont, "Segoe UI", Roboto; 
+    background: #f0f2f5; 
+    display: flex; 
+    justify-content: center; 
+    padding: 15px; 
+    margin: 0;
 }
 
-// 2. THE TIMER (Locked Screen Proof)
-function toggleTimer() {
-    if (isRunning) {
-        const endTime = new Date();
-        const diffInSeconds = Math.round((endTime - startTime) / 1000);
-        
-        clearInterval(timerInterval);
-        isRunning = false;
-        startStopBtn.innerText = "Start";
-        
-        saveTimeData(selectedCategory.name, diffInSeconds);
-        display.innerText = "00:00:00";
-    } else {
-        isRunning = true;
-        startTime = new Date(); // Record exact moment of start
-        startStopBtn.innerText = "Stop";
-        
-        timerInterval = setInterval(() => {
-            const now = new Date();
-            const elapsed = Math.round((now - startTime) / 1000);
-            display.innerText = new Date(elapsed * 1000).toISOString().substr(11, 8);
-        }, 1000);
-    }
+.main-container { width: 100%; max-width: 450px; }
+
+.card { 
+    background: white; 
+    padding: 20px; 
+    border-radius: 24px; 
+    box-shadow: 0 8px 30px rgba(0,0,0,0.04); 
+    margin-bottom: 20px; 
+    text-align: center; 
 }
 
-// 3. MANUAL INPUT
-function addManualTime() {
-    const mins = prompt(`How many minutes of ${selectedCategory.name} to add?`);
-    if (mins && !isNaN(mins)) {
-        saveTimeData(selectedCategory.name, parseInt(mins) * 60);
-    }
+.app-title { font-size: 1.2rem; color: #888; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 20px; }
+
+/* Horizontal Slidable Activity Row */
+.activity-scroll-container {
+    display: flex;
+    overflow-x: auto;
+    gap: 12px;
+    padding: 10px 5px;
+    margin-bottom: 20px;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch; /* Smooth scrolling for iPhone */
 }
 
-// 4. DATA LOGIC
-function saveTimeData(category, duration) {
-    if (duration < 1) return;
-    let data = JSON.parse(localStorage.getItem('timeTrackerData')) || [];
-    data.push({ category, duration, date: new Date().toISOString() });
-    localStorage.setItem('timeTrackerData', JSON.stringify(data));
-    updateChart('week');
-    renderHistory();
+/* Hide scrollbar for clean look */
+.activity-scroll-container::-webkit-scrollbar { display: none; }
+
+.activity-tile {
+    flex: 0 0 90px;
+    height: 90px;
+    border-radius: 18px;
+    border: 3px solid transparent;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.85rem;
+    font-weight: 700;
+    cursor: pointer;
+    scroll-snap-align: start;
+    transition: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    background: #f8f9fa;
+    text-align: center;
+    padding: 10px;
+    word-break: break-word;
 }
 
-function renderHistory() {
-    let data = JSON.parse(localStorage.getItem('timeTrackerData')) || [];
-    const log = document.getElementById('historyLog');
-    log.innerHTML = '';
-    [...data].reverse().slice(0, 10).forEach((s, i) => {
-        const actualIdx = data.length - 1 - i;
-        const time = new Date(s.duration * 1000).toISOString().substr(11, 8);
-        const date = new Date(s.date).toLocaleDateString();
-        log.innerHTML += `<div class="activity-item">
-            <span><strong>${s.category}</strong> (${date})<br>${time}</span>
-            <span class="delete-link" onclick="deleteSession(${actualIdx})">Remove</span>
-        </div>`;
-    });
+.activity-tile.selected {
+    border-color: currentColor;
+    transform: scale(1.05);
+    background: white !important;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
 }
 
-function deleteSession(idx) {
-    let data = JSON.parse(localStorage.getItem('timeTrackerData')) || [];
-    data.splice(idx, 1);
-    localStorage.setItem('timeTrackerData', JSON.stringify(data));
-    renderHistory();
-    updateChart('week');
+#display { 
+    font-size: 4.5rem; 
+    font-weight: 800; 
+    margin: 20px 0; 
+    font-family: 'Courier New', Courier, monospace;
+    color: #222;
 }
 
-// 5. CATEGORY SETTINGS
-function renderActivities() {
-    const list = document.getElementById('activityList');
-    list.innerHTML = '';
-    categories.forEach((cat, index) => {
-        list.innerHTML += `<div class="activity-item">
-            <span><small style="color:${cat.color}">●</small> ${cat.name}</span>
-            <span class="delete-link" onclick="deleteActivity(${index})">Delete</span>
-        </div>`;
-    });
-    localStorage.setItem('trackerCategories', JSON.stringify(categories));
-    updateButtonColor();
+#startStopBtn { 
+    width: 100%; 
+    padding: 20px; 
+    border-radius: 50px; 
+    border: none; 
+    color: white; 
+    font-size: 1.5rem; 
+    font-weight: 800; 
+    cursor: pointer;
+    box-shadow: 0 10px 20px rgba(0,0,0,0.1);
 }
 
-function addActivity() {
-    const name = document.getElementById('newActivityName').value;
-    const color = document.getElementById('newActivityColor').value;
-    if (name) {
-        categories.push({ name, color });
-        document.getElementById('newActivityName').value = '';
-        renderActivityTiles();
-        renderActivities();
-    }
+.manual-link { 
+    display: block; 
+    margin-top: 20px; 
+    color: #007AFF; 
+    font-size: 0.9rem; 
+    font-weight: 500;
+    cursor: pointer;
 }
 
-function deleteActivity(index) {
-    if(confirm("Delete this category?")) {
-        categories.splice(index, 1);
-        selectedCategory = categories[0];
-        renderActivityTiles();
-        renderActivities();
-    }
-}
+.header-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+.controls button { padding: 6px 12px; border: none; background: #eee; border-radius: 8px; font-weight: 600; }
 
-function updateButtonColor() {
-    if (selectedCategory) startStopBtn.style.backgroundColor = selectedCategory.color;
-}
+.history-list { text-align: left; max-height: 200px; overflow-y: auto; margin-top: 15px; }
+.activity-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #f0f0f0; }
+.delete-link { color: #FF3B30; font-weight: 700; font-size: 0.8rem; cursor: pointer; }
 
-function clearAllData() {
-    if(confirm("Erase everything?")) {
-        localStorage.removeItem('timeTrackerData');
-        renderHistory();
-        updateChart('week');
-    }
-}
+.danger-btn { background: none; border: 1px solid #FF3B30; color: #FF3B30; padding: 10px; width: 100%; border-radius: 12px; margin-top: 10px; font-weight: 600; }
+.canvas-wrapper { height: 260px; position: relative; }
 
-// 6. CHART
-function updateChart(timeframe) {
-    const data = JSON.parse(localStorage.getItem('timeTrackerData')) || [];
-    const now = new Date();
-    let cutoff = new Date();
-    if (timeframe === 'week') cutoff.setDate(now.getDate() - 7);
-    else if (timeframe === 'month') cutoff.setMonth(now.getMonth() - 1);
-    else cutoff.setFullYear(now.getFullYear() - 1);
-
-    const totals = {};
-    data.forEach(s => {
-        if (new Date(s.date) >= cutoff) {
-            totals[s.category] = (totals[s.category] || 0) + (s.duration / 3600);
-        }
-    });
-
-    const ctx = document.getElementById('timeChart').getContext('2d');
-    if (myChart) myChart.destroy();
-    myChart = new Chart(ctx, {
-        type: 'doughnut',
-        data: {
-            labels: Object.keys(totals),
-            datasets: [{
-                data: Object.values(totals),
-                backgroundColor: Object.keys(totals).map(n => categories.find(c => c.name === n)?.color || '#ccc'),
-                borderWidth: 0
-            }]
-        },
-        options: { maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
-    });
-}
-
-// START
-startStopBtn.addEventListener('click', toggleTimer);
-renderActivityTiles();
-renderActivities();
-renderHistory();
-updateChart('week');
+input[type="text"] { width: 60%; padding: 12px; border-radius: 10px; border: 1px solid #ddd; }
+.add-row { display: flex; gap: 10px; justify-content: center; align-items: center; }
