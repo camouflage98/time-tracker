@@ -3,35 +3,30 @@ let seconds = 0;
 let isRunning = false;
 let myChart = null;
 
-// Initial Default Categories
+// Load Categories
 let categories = JSON.parse(localStorage.getItem('trackerCategories')) || [
     { name: 'Reading', color: '#4CAF50' },
-    { name: 'Exercising', color: '#2196F3' }
+    { name: 'Exercising', color: '#2196F3' },
+    { name: 'VFX Work', color: '#9C27B0' }
 ];
 
-// UI ELEMENTS
+// Elements
 const display = document.getElementById('display');
 const startStopBtn = document.getElementById('startStopBtn');
 const categorySelect = document.getElementById('categorySelect');
 const activityList = document.getElementById('activityList');
+const historyLog = document.getElementById('historyLog');
 
-// 1. MANAGE ACTIVITIES
+// 1. CATEGORY MANAGEMENT
 function renderActivities() {
     categorySelect.innerHTML = '';
     activityList.innerHTML = '';
-    
     categories.forEach((cat, index) => {
-        // Add to dropdown
-        let option = new Option(cat.name, cat.name);
-        categorySelect.add(option);
-        
-        // Add to management list
-        let li = document.createElement('li');
+        categorySelect.add(new Option(cat.name, cat.name));
+        let li = document.createElement('div');
         li.className = 'activity-item';
-        li.innerHTML = `
-            <span><span style="color:${cat.color}">●</span> ${cat.name}</span>
-            <span class="delete-link" onclick="deleteActivity(${index})">Delete</span>
-        `;
+        li.innerHTML = `<span><small style="color:${cat.color}">●</small> ${cat.name}</span>
+                        <span class="delete-link" onclick="deleteActivity(${index})">Delete</span>`;
         activityList.appendChild(li);
     });
     localStorage.setItem('trackerCategories', JSON.stringify(categories));
@@ -39,7 +34,7 @@ function renderActivities() {
 }
 
 function addActivity() {
-    const name = document.getElementById('newActivityName').value;
+    const name = document.getElementById('newActivityName').value.trim();
     const color = document.getElementById('newActivityColor').value;
     if (name) {
         categories.push({ name, color });
@@ -49,16 +44,15 @@ function addActivity() {
 }
 
 function deleteActivity(index) {
-    categories.splice(index, 1);
-    renderActivities();
+    if(confirm("Delete this category?")) {
+        categories.splice(index, 1);
+        renderActivities();
+    }
 }
 
 function updateButtonColor() {
-    const selectedName = categorySelect.value;
-    const activeCat = categories.find(c => c.name === selectedName);
-    if (activeCat) {
-        startStopBtn.style.backgroundColor = activeCat.color;
-    }
+    const activeCat = categories.find(c => c.name === categorySelect.value);
+    if (activeCat) startStopBtn.style.backgroundColor = activeCat.color;
 }
 
 // 2. TIMER LOGIC
@@ -80,23 +74,50 @@ function toggleTimer() {
     }
 }
 
-// 3. DATA HANDLING
+// 3. HISTORY & DATA
 function saveTimeData(category, duration) {
     if (duration < 1) return;
     let data = JSON.parse(localStorage.getItem('timeTrackerData')) || [];
     data.push({ category, duration, date: new Date().toISOString() });
     localStorage.setItem('timeTrackerData', JSON.stringify(data));
     updateChart('week');
+    renderHistory();
+}
+
+function renderHistory() {
+    let data = JSON.parse(localStorage.getItem('timeTrackerData')) || [];
+    historyLog.innerHTML = '';
+    // Show most recent at the top
+    [...data].reverse().forEach((session, revIdx) => {
+        const actualIdx = data.length - 1 - revIdx;
+        const time = new Date(session.duration * 1000).toISOString().substr(11, 8);
+        const date = new Date(session.date).toLocaleDateString();
+        
+        let item = document.createElement('div');
+        item.className = 'activity-item';
+        item.innerHTML = `<span><strong>${session.category}</strong> <small>(${date})</small><br>${time}</span>
+                        <span class="delete-link" onclick="deleteSession(${actualIdx})">Remove</span>`;
+        historyLog.appendChild(item);
+    });
+}
+
+function deleteSession(index) {
+    let data = JSON.parse(localStorage.getItem('timeTrackerData')) || [];
+    data.splice(index, 1);
+    localStorage.setItem('timeTrackerData', JSON.stringify(data));
+    renderHistory();
+    updateChart('week');
 }
 
 function clearAllData() {
-    if(confirm("Delete all history?")) {
+    if(confirm("This will erase all your history. Proceed?")) {
         localStorage.removeItem('timeTrackerData');
+        renderHistory();
         updateChart('week');
     }
 }
 
-// 4. CHART LOGIC
+// 4. CHARTING
 function updateChart(timeframe) {
     const data = JSON.parse(localStorage.getItem('timeTrackerData')) || [];
     const now = new Date();
@@ -114,23 +135,21 @@ function updateChart(timeframe) {
 
     const ctx = document.getElementById('timeChart').getContext('2d');
     if (myChart) myChart.destroy();
-    
     myChart = new Chart(ctx, {
-        type: 'doughnut', // Changed to doughnut for a modern look
+        type: 'doughnut',
         data: {
             labels: Object.keys(totals),
             datasets: [{
                 data: Object.values(totals),
-                backgroundColor: Object.keys(totals).map(name => 
-                    categories.find(c => c.name === name)?.color || '#ccc'
-                )
+                backgroundColor: Object.keys(totals).map(n => categories.find(c => c.name === n)?.color || '#ccc')
             }]
         },
         options: { maintainAspectRatio: false }
     });
 }
 
-// INIT
+// Start
 startStopBtn.addEventListener('click', toggleTimer);
 renderActivities();
+renderHistory();
 updateChart('week');
