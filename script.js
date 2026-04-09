@@ -1,80 +1,81 @@
 let timerInterval;
-let seconds = 0;
+let startTime; 
 let isRunning = false;
+let selectedCategory = null;
 let myChart = null;
 
-// Load Categories
+// Categories
 let categories = JSON.parse(localStorage.getItem('trackerCategories')) || [
     { name: 'Reading', color: '#4CAF50' },
-    { name: 'Exercising', color: '#2196F3' },
-    { name: 'VFX Work', color: '#9C27B0' }
+    { name: 'Exercising', color: '#007AFF' },
+    { name: 'VFX', color: '#5856D6' },
+    { name: 'Birds', color: '#FF9500' }
 ];
 
-// Elements
 const display = document.getElementById('display');
 const startStopBtn = document.getElementById('startStopBtn');
-const categorySelect = document.getElementById('categorySelect');
-const activityList = document.getElementById('activityList');
-const historyLog = document.getElementById('historyLog');
 
-// 1. CATEGORY MANAGEMENT
-function renderActivities() {
-    categorySelect.innerHTML = '';
-    activityList.innerHTML = '';
-    categories.forEach((cat, index) => {
-        categorySelect.add(new Option(cat.name, cat.name));
-        let li = document.createElement('div');
-        li.className = 'activity-item';
-        li.innerHTML = `<span><small style="color:${cat.color}">●</small> ${cat.name}</span>
-                        <span class="delete-link" onclick="deleteActivity(${index})">Delete</span>`;
-        activityList.appendChild(li);
+// 1. SELECTING ACTIVITY (TILE LOGIC)
+function renderActivityTiles() {
+    const container = document.getElementById('activityTiles');
+    container.innerHTML = '';
+    categories.forEach(cat => {
+        const div = document.createElement('div');
+        div.className = 'activity-tile';
+        if (selectedCategory && selectedCategory.name === cat.name) {
+            div.classList.add('selected');
+        }
+        div.style.color = cat.color;
+        div.innerText = cat.name;
+        div.onclick = () => {
+            selectedCategory = cat;
+            renderActivityTiles();
+            renderActivities(); // Sync the delete list
+            updateButtonColor();
+        };
+        container.appendChild(div);
     });
-    localStorage.setItem('trackerCategories', JSON.stringify(categories));
-    updateButtonColor();
-}
-
-function addActivity() {
-    const name = document.getElementById('newActivityName').value.trim();
-    const color = document.getElementById('newActivityColor').value;
-    if (name) {
-        categories.push({ name, color });
-        document.getElementById('newActivityName').value = '';
-        renderActivities();
+    
+    if (!selectedCategory && categories.length > 0) {
+        selectedCategory = categories[0];
+        renderActivityTiles();
     }
 }
 
-function deleteActivity(index) {
-    if(confirm("Delete this category?")) {
-        categories.splice(index, 1);
-        renderActivities();
-    }
-}
-
-function updateButtonColor() {
-    const activeCat = categories.find(c => c.name === categorySelect.value);
-    if (activeCat) startStopBtn.style.backgroundColor = activeCat.color;
-}
-
-// 2. TIMER LOGIC
+// 2. THE TIMER (Locked Screen Proof)
 function toggleTimer() {
     if (isRunning) {
+        const endTime = new Date();
+        const diffInSeconds = Math.round((endTime - startTime) / 1000);
+        
         clearInterval(timerInterval);
         isRunning = false;
         startStopBtn.innerText = "Start";
-        saveTimeData(categorySelect.value, seconds);
-        seconds = 0;
+        
+        saveTimeData(selectedCategory.name, diffInSeconds);
         display.innerText = "00:00:00";
     } else {
         isRunning = true;
+        startTime = new Date(); // Record exact moment of start
         startStopBtn.innerText = "Stop";
+        
         timerInterval = setInterval(() => {
-            seconds++;
-            display.innerText = new Date(seconds * 1000).toISOString().substr(11, 8);
+            const now = new Date();
+            const elapsed = Math.round((now - startTime) / 1000);
+            display.innerText = new Date(elapsed * 1000).toISOString().substr(11, 8);
         }, 1000);
     }
 }
 
-// 3. HISTORY & DATA
+// 3. MANUAL INPUT
+function addManualTime() {
+    const mins = prompt(`How many minutes of ${selectedCategory.name} to add?`);
+    if (mins && !isNaN(mins)) {
+        saveTimeData(selectedCategory.name, parseInt(mins) * 60);
+    }
+}
+
+// 4. DATA LOGIC
 function saveTimeData(category, duration) {
     if (duration < 1) return;
     let data = JSON.parse(localStorage.getItem('timeTrackerData')) || [];
@@ -86,38 +87,74 @@ function saveTimeData(category, duration) {
 
 function renderHistory() {
     let data = JSON.parse(localStorage.getItem('timeTrackerData')) || [];
-    historyLog.innerHTML = '';
-    // Show most recent at the top
-    [...data].reverse().forEach((session, revIdx) => {
-        const actualIdx = data.length - 1 - revIdx;
-        const time = new Date(session.duration * 1000).toISOString().substr(11, 8);
-        const date = new Date(session.date).toLocaleDateString();
-        
-        let item = document.createElement('div');
-        item.className = 'activity-item';
-        item.innerHTML = `<span><strong>${session.category}</strong> <small>(${date})</small><br>${time}</span>
-                        <span class="delete-link" onclick="deleteSession(${actualIdx})">Remove</span>`;
-        historyLog.appendChild(item);
+    const log = document.getElementById('historyLog');
+    log.innerHTML = '';
+    [...data].reverse().slice(0, 10).forEach((s, i) => {
+        const actualIdx = data.length - 1 - i;
+        const time = new Date(s.duration * 1000).toISOString().substr(11, 8);
+        const date = new Date(s.date).toLocaleDateString();
+        log.innerHTML += `<div class="activity-item">
+            <span><strong>${s.category}</strong> (${date})<br>${time}</span>
+            <span class="delete-link" onclick="deleteSession(${actualIdx})">Remove</span>
+        </div>`;
     });
 }
 
-function deleteSession(index) {
+function deleteSession(idx) {
     let data = JSON.parse(localStorage.getItem('timeTrackerData')) || [];
-    data.splice(index, 1);
+    data.splice(idx, 1);
     localStorage.setItem('timeTrackerData', JSON.stringify(data));
     renderHistory();
     updateChart('week');
 }
 
+// 5. CATEGORY SETTINGS
+function renderActivities() {
+    const list = document.getElementById('activityList');
+    list.innerHTML = '';
+    categories.forEach((cat, index) => {
+        list.innerHTML += `<div class="activity-item">
+            <span><small style="color:${cat.color}">●</small> ${cat.name}</span>
+            <span class="delete-link" onclick="deleteActivity(${index})">Delete</span>
+        </div>`;
+    });
+    localStorage.setItem('trackerCategories', JSON.stringify(categories));
+    updateButtonColor();
+}
+
+function addActivity() {
+    const name = document.getElementById('newActivityName').value;
+    const color = document.getElementById('newActivityColor').value;
+    if (name) {
+        categories.push({ name, color });
+        document.getElementById('newActivityName').value = '';
+        renderActivityTiles();
+        renderActivities();
+    }
+}
+
+function deleteActivity(index) {
+    if(confirm("Delete this category?")) {
+        categories.splice(index, 1);
+        selectedCategory = categories[0];
+        renderActivityTiles();
+        renderActivities();
+    }
+}
+
+function updateButtonColor() {
+    if (selectedCategory) startStopBtn.style.backgroundColor = selectedCategory.color;
+}
+
 function clearAllData() {
-    if(confirm("This will erase all your history. Proceed?")) {
+    if(confirm("Erase everything?")) {
         localStorage.removeItem('timeTrackerData');
         renderHistory();
         updateChart('week');
     }
 }
 
-// 4. CHARTING
+// 6. CHART
 function updateChart(timeframe) {
     const data = JSON.parse(localStorage.getItem('timeTrackerData')) || [];
     const now = new Date();
@@ -141,15 +178,17 @@ function updateChart(timeframe) {
             labels: Object.keys(totals),
             datasets: [{
                 data: Object.values(totals),
-                backgroundColor: Object.keys(totals).map(n => categories.find(c => c.name === n)?.color || '#ccc')
+                backgroundColor: Object.keys(totals).map(n => categories.find(c => c.name === n)?.color || '#ccc'),
+                borderWidth: 0
             }]
         },
-        options: { maintainAspectRatio: false }
+        options: { maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
     });
 }
 
-// Start
+// START
 startStopBtn.addEventListener('click', toggleTimer);
+renderActivityTiles();
 renderActivities();
 renderHistory();
 updateChart('week');
