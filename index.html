@@ -3,14 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Custom Time Tracker</title>
+    <title>Personal Time Tracker</title>
     <link rel="stylesheet" href="style.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
 
     <div class="main-container">
-        <section class="tracker-card" id="timerCard">
+        <section class="card">
             <h1>Time Tracker</h1>
             <div class="input-group">
                 <select id="categorySelect" onchange="updateButtonColor()"></select>
@@ -19,22 +19,10 @@
             <button id="startStopBtn">Start</button>
         </section>
 
-        <section class="config-card">
-            <h3>Manage Activities</h3>
-            <div class="add-activity">
-                <input type="text" id="newActivityName" placeholder="Activity Name">
-                <input type="color" id="newActivityColor" value="#4CAF50">
-                <button onclick="addActivity()">Add</button>
-            </div>
-            <ul id="activityList"></ul>
-            <hr>
-            <button class="danger-btn" onclick="clearAllData()">Reset All Data</button>
-        </section>
-
-        <section class="chart-card">
-            <div class="chart-header">
+        <section class="card">
+            <div class="header-row">
                 <h2>Overview</h2>
-                <div class="chart-controls">
+                <div class="controls">
                     <button onclick="updateChart('week')">W</button>
                     <button onclick="updateChart('month')">M</button>
                     <button onclick="updateChart('year')">Y</button>
@@ -43,6 +31,24 @@
             <div class="canvas-wrapper">
                 <canvas id="timeChart"></canvas>
             </div>
+        </section>
+
+        <section class="card">
+            <h3>Add New Activity</h3>
+            <div class="add-row">
+                <input type="text" id="newActivityName" placeholder="Name">
+                <input type="color" id="newActivityColor" value="#4CAF50">
+                <button onclick="addActivity()">Add</button>
+            </div>
+            <ul id="activityList"></ul>
+        </section>
+
+        <section class="card">
+            <h3>Recent History</h3>
+            <div id="historyLog" class="history-list">
+                </div>
+            <hr>
+            <button class="danger-btn" onclick="clearAllData()">Reset Everything</button>
         </section>
     </div>
 
