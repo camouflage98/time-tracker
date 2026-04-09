@@ -2,8 +2,8 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Personal Time Tracker</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Bird & VFX Tracker</title>
     <link rel="apple-touch-icon" href="icon.png">
     <link rel="stylesheet" href="style.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -12,12 +12,15 @@
 
     <div class="main-container">
         <section class="card">
-            <h1>Time Tracker</h1>
-            <div class="input-group">
-                <select id="categorySelect" onchange="updateButtonColor()"></select>
-            </div>
+            <h1 class="app-title">Time Tracker</h1>
+            
+            <div class="activity-scroll-container" id="activityTiles"></div>
+
             <div id="display">00:00:00</div>
+            
             <button id="startStopBtn">Start</button>
+            
+            <span class="manual-link" onclick="addManualTime()">+ Forgot to start? Add time manually</span>
         </section>
 
         <section class="card">
@@ -35,9 +38,9 @@
         </section>
 
         <section class="card">
-            <h3>Add New Activity</h3>
+            <h3>Manage Activities</h3>
             <div class="add-row">
-                <input type="text" id="newActivityName" placeholder="Name">
+                <input type="text" id="newActivityName" placeholder="Activity Name">
                 <input type="color" id="newActivityColor" value="#4CAF50">
                 <button onclick="addActivity()">Add</button>
             </div>
@@ -46,8 +49,7 @@
 
         <section class="card">
             <h3>Recent History</h3>
-            <div id="historyLog" class="history-list">
-                </div>
+            <div id="historyLog" class="history-list"></div>
             <hr>
             <button class="danger-btn" onclick="clearAllData()">Reset Everything</button>
         </section>
