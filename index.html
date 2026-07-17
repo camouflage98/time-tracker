@@ -7,19 +7,37 @@
     <link rel="apple-touch-icon" href="icon.png">
     <link rel="stylesheet" href="style.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
 </head>
 <body>
 
     <div class="main-container">
+        <!-- Tracker Section -->
         <section class="card">
             <h1 class="app-title">Vireo</h1>
             <div class="activity-scroll-container" id="activityTiles"></div>
             <div id="display">00:00:00</div>
             <button id="startStopBtn">Start</button>
-            <span class="manual-link" onclick="addManualTime()">+ Forgot to start? Add time manually</span>
+            
+            <div class="voice-container" style="margin-top: 15px; display: flex; flex-direction: column; gap: 10px;">
+                <span class="manual-link" onclick="addManualTime()">+ Forgot to start? Add time manually</span>
+                <button id="voiceBtn" class="voice-btn" onclick="listenToVoice()">🎙️ Voice Command</button>
+            </div>
         </section>
 
+        <!-- Focus Flight Game Section -->
+        <section class="card game-card">
+            <div class="header-row">
+                <h3>Focus Flight</h3>
+                <div id="gameStats">Lives: <span id="livesCount">3</span></div>
+            </div>
+            <canvas id="gameCanvas" width="350" height="200"></canvas>
+            <div class="controls" style="margin-top: 15px;">
+                <button id="startGameBtn" onclick="toggleGame()">Start Game</button>
+            </div>
+            <p style="font-size: 0.8rem; color: #888; margin-top: 10px;">Tap or press Space to fly. Avoid branches, houses, poles, and wires!</p>
+        </section>
+
+        <!-- Overview Section -->
         <section class="card">
             <div class="header-row">
                 <h2>Overview</h2>
@@ -33,10 +51,10 @@
             <div class="canvas-wrapper">
                 <canvas id="timeChart"></canvas>
             </div>
-            <div id="goalContainer" style="margin-top: 20px;">
-                </div>
+            <div id="goalContainer" style="margin-top: 20px;"></div>
         </section>
 
+        <!-- Settings Section -->
         <section class="card">
             <h3>Manage Activities</h3>
             <div class="add-column">
@@ -47,16 +65,20 @@
                     <button onclick="addActivity()">Add</button>
                 </div>
             </div>
-            <ul id="activityList"></ul>
+            <ul id="activityList" style="padding-left: 0; list-style: none;"></ul>
         </section>
 
+        <!-- History Section -->
         <section class="card">
             <h3>Recent History</h3>
             <div id="historyLog" class="history-list"></div>
-            <hr>
+            <hr style="border: 0; border-top: 1px solid #eee; margin: 15px 0;">
             <button class="danger-btn" onclick="clearAllData()">Reset Everything</button>
         </section>
     </div>
+
+    <!-- Custom Toast Notification UI -->
+    <div id="toast" class="toast"></div>
 
     <script src="script.js"></script>
 </body>
