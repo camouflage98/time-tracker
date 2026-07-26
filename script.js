@@ -173,17 +173,20 @@ async function sendToAI(transcript) {
         The user said: "${transcript}".
         
         The current active categories are: [${categoryNames}].
-        Your job is to match the spoken input to one of these actions: "add_time", "start_timer", "stop_timer".
+        Your job is to match the spoken input to one of these actions: "add_time", "start_timer", "stop_timer", "create_category", "set_goal".
 
         Rules:
         - If "add_time", extract the correct category and duration in minutes.
+        - If "create_category", extract the new category name (in "category") and, if a daily goal was mentioned, its hours (in "goal_hours", else 0).
+        - If "set_goal", extract the category (match to an active category if possible) and the new daily goal in hours (in "goal_hours").
         - If the category mentioned is a close match to an active category, match it exactly.
         - Respond ONLY with a raw, valid JSON object following this exact schema. No Markdown wrapper.
-        
+
         {
-            "action": "add_time" | "start_timer" | "stop_timer",
-            "category": "String (must match one of active categories exactly)",
-            "duration_minutes": number
+            "action": "add_time" | "start_timer" | "stop_timer" | "create_category" | "set_goal",
+            "category": "String (must match one of active categories exactly, or the new category name for create_category)",
+            "duration_minutes": number,
+            "goal_hours": number
         }
     `;
 
@@ -252,6 +255,31 @@ function executeAICommand(command, transcript) {
             showToast("Timer stopped and logged!");
         } else {
             showToast("No active timer to stop.");
+        }
+    }
+    else if (command.action === "create_category") {
+        const exists = categories.some(c => c.name.toLowerCase() === command.category.toLowerCase());
+        if (exists) {
+            showToast(`"${command.category}" already exists.`);
+        } else {
+            const palette = ['#0000FF', '#FF0000', '#4CAF50', '#FF9800', '#9C27B0', '#00BCD4', '#E91E63'];
+            const color = palette[categories.length % palette.length];
+            categories.push({ name: command.category, color, goal: command.goal_hours || 0 });
+            renderActivityTiles();
+            renderActivities();
+            updateChart('week');
+            showToast(`Created category "${command.category}"!`);
+        }
+    }
+    else if (command.action === "set_goal") {
+        const cat = categories.find(c => c.name.toLowerCase() === command.category.toLowerCase());
+        if (cat) {
+            cat.goal = command.goal_hours;
+            renderActivities();
+            updateChart('week');
+            showToast(`Set ${cat.name}'s goal to ${command.goal_hours}h!`);
+        } else {
+            showToast(`Couldn't find category "${command.category}".`);
         }
     }
 }
