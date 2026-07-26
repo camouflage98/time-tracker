@@ -264,7 +264,19 @@ function listenToVoice() {
     const voiceBtn = document.getElementById('voiceBtn');
 
     recognition.onstart = () => { voiceBtn.innerText = "🎙️ Listening..."; };
-    recognition.onerror = () => { voiceBtn.innerText = "🎙️ Voice Command"; showToast("Could not hear you."); };
+    recognition.onerror = (e) => {
+        voiceBtn.innerText = "🎙️ Voice Command";
+        console.error("Speech recognition error:", e.error);
+        if (e.error === 'not-allowed' || e.error === 'service-not-allowed') {
+            showToast("Mic access denied. Enable it in Settings > Safari > Microphone.");
+        } else if (e.error === 'no-speech') {
+            showToast("Didn't hear anything. Try again.");
+        } else if (e.error === 'audio-capture') {
+            showToast("No microphone found.");
+        } else {
+            showToast(`Voice error: ${e.error}`);
+        }
+    };
     recognition.onresult = (e) => {
         voiceBtn.innerText = "🎙️ Voice Command";
         sendToAI(e.results[0][0].transcript);
