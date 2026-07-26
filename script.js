@@ -165,7 +165,7 @@ async function sendToAI(transcript) {
         }
     }
 
-    const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+    const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=${apiKey}`;
     const categoryNames = categories.map(c => c.name).join(", ");
 
     const promptText = `
@@ -197,15 +197,29 @@ async function sendToAI(transcript) {
         });
 
         const data = await response.json();
-        
-        // If the API key is rejected, clear it so the browser prompts you for a new one on next try
+
         if (data.error) {
-            localStorage.removeItem('vireo_gemini_key');
-            showToast("Invalid API Key. Local cache cleared.");
+            const msg = data.error.message || "Unknown error";
+            const status = data.error.status || "";
+            console.error("Gemini API error:", data.error);
+            // Only clear the key when the key itself is the problem
+            if (status === "INVALID_ARGUMENT" || status === "PERMISSION_DENIED" || status === "UNAUTHENTICATED" || /API key/i.test(msg)) {
+                localStorage.removeItem('vireo_gemini_key');
+                showToast("Invalid API Key. Please re-enter it.");
+            } else {
+                showToast(`Gemini error: ${msg}`);
+            }
             return;
         }
 
-        const responseText = data.candidates[0].content.parts[0].text.replace(/```json|```/g, '').trim();
+        const candidate = data.candidates?.[0];
+        if (!candidate?.content) {
+            const blockReason = data.promptFeedback?.blockReason;
+            showToast(blockReason ? `Blocked: ${blockReason}` : "No response from AI. Try again.");
+            return;
+        }
+
+        const responseText = candidate.content.parts[0].text.replace(/```json|```/g, '').trim();
         const command = JSON.parse(responseText);
 
         executeAICommand(command);
