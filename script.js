@@ -15,7 +15,7 @@ function showToast(message) {
     const toast = document.getElementById('toast');
     toast.innerText = message;
     toast.classList.add('show');
-    setTimeout(() => { toast.classList.remove('show'); }, 3000);
+    setTimeout(() => { toast.classList.remove('show'); }, 4500);
 }
 
 function renderActivityTiles() {
@@ -222,19 +222,20 @@ async function sendToAI(transcript) {
         const responseText = candidate.content.parts[0].text.replace(/```json|```/g, '').trim();
         const command = JSON.parse(responseText);
 
-        executeAICommand(command);
+        executeAICommand(command, transcript);
     } catch (e) {
         console.error(e);
         showToast("Failed to process command.");
     }
 }
 
-function executeAICommand(command) {
+function executeAICommand(command, transcript) {
     if (command.action === "add_time") {
         const seconds = command.duration_minutes * 60;
         saveTimeData(command.category, seconds);
-        showToast(`Logged ${command.duration_minutes}m to ${command.category}!`);
-    } 
+        console.log(`Heard: "${transcript}" -> ${command.duration_minutes}m to ${command.category}`);
+        showToast(`Heard "${transcript}" - Logged ${command.duration_minutes}m to ${command.category}!`);
+    }
     else if (command.action === "start_timer") {
         const cat = categories.find(c => c.name.toLowerCase() === command.category.toLowerCase());
         if (cat) {
