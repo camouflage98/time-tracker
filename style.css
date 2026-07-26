@@ -10,9 +10,7 @@ body { font-family: -apple-system, system-ui, sans-serif; background: #f0f2f5; d
 .activity-tile.selected { border-color: currentColor; transform: scale(1.05); background: white !important; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
 
 #display { font-size: 4.5rem; font-weight: 800; margin: 20px 0; font-family: monospace; color: #222; }
-#startStopBtn, #startGameBtn { width: 100%; padding: 20px; border-radius: 50px; border: none; font-size: 1.5rem; font-weight: 800; cursor: pointer; box-shadow: 0 10px 20px rgba(0,0,0,0.1); transition: background 0.2s; }
-#startStopBtn { color: white; background: #333; }
-#startGameBtn { color: white; background: #007AFF; padding: 15px; font-size: 1.2rem; }
+#startStopBtn { width: 100%; padding: 20px; border-radius: 50px; border: none; font-size: 1.5rem; font-weight: 800; cursor: pointer; box-shadow: 0 10px 20px rgba(0,0,0,0.1); transition: background 0.2s; color: white; background: #333; }
 
 .manual-link { display: block; color: #007AFF; font-size: 0.9rem; cursor: pointer; text-decoration: none; }
 
@@ -43,11 +41,6 @@ input[type="number"] { width: 80px; }
 .danger-btn { background: none; border: 1px solid #FF3B30; color: #FF3B30; padding: 10px; width: 100%; border-radius: 12px; margin-top: 10px; font-weight: 600; cursor: pointer; transition: background 0.2s; }
 .danger-btn:hover { background: #ffebeb; }
 .canvas-wrapper { height: 280px; position: relative; }
-
-/* Focus Game Card */
-.game-card { overflow: hidden; }
-#gameCanvas { background: linear-gradient(#e0f2fe, #fff); border-radius: 15px; border: 2px solid #f0f0f0; width: 100%; height: 200px; display: block; touch-action: none; }
-#gameStats { font-weight: 800; color: #FF3B30; font-size: 1.1rem; }
 
 /* Toast Styling */
 .toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%) translateY(100px); background: #333; color: #fff; padding: 12px 24px; border-radius: 50px; font-weight: bold; font-size: 0.9rem; box-shadow: 0 4px 15px rgba(0,0,0,0.2); transition: transform 0.3s ease-out; z-index: 1000; opacity: 0; pointer-events: none; }
